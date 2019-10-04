@@ -72,21 +72,31 @@ def injectSig(wf, noise, start_time_s = 0):
 	begin = int(start_time_s * sample_rate_hz)
 	wfpad = np.pad(wf, (begin, len(noise)-begin-len(wf)), 'constant', constant_values=(0,0))
 	combined = noise + wfpad
-	pdb.set_trace()
 	return combined
 
 # performs bandpass filter on signal given starting freq, stopping freq, and filter slope/width
-def bandpass(signal, startf=10, stopf=10000, w=1):
+## something wrong with startf and stopf
+def bandpass(signal, startf=10, stopf=30, w=1):
 	# in fourier domain, multiply by sigmoids with low cutoff and high cutoff
-	fft = 
-	lowsigmoid = 
-	highsigmoid = 
+	fft = np.fft.rfft(signal)
+	f = np.fft.fftfreq(len(fft),.01)
+	a = 1/(1+np.exp(-(1/w)*(f-startf)))
+	b = 1/(1+np.exp(-(1/w)*(-f-(stopf))))
+	sfft = fft*(a+b)
+	fpos=f[0:int(len(f)/2)]
+	filtsig = np.fft.irfft(sfft)
+	# plt.plot(filtsig)
+	# plt.show()
+	return filtsig
 
 # do things:
 noise = shadedNoise(gaussianNoise(), 10, 2, 10, 2, 1)
 wf = genwf()
 detectedSig = injectSig(wf, noise)
 bpSig = bandpass(detectedSig)
+plt.plot(detectedSig)
+plt.plot(bpSig)
+plt.show()
 # does the noise have proper amplitude?
 
 

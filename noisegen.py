@@ -7,6 +7,7 @@ import NRSur7dq2
 
 # LIGO sample rate: 16384
 sample_rate_hz = 1000.
+dt = 1./sample_rate_hz
 
 # generate gaussian noise
 def gaussianNoise(amp = (1,1), noiseSigma = (0.2,1), dur_s = 8.192):
@@ -27,7 +28,7 @@ def shadedNoise(signal, A, p1, B, p2, f0):
 
 	# power law to make bowl shape in the fourier domain
 	fft = np.fft.rfft(signal)
-	f = np.fft.fftfreq(len(fft),.01)
+	f = np.fft.fftfreq(len(fft),dt)
 	a = A * (f+f0)**(-p1)
 	b = B * (f+f0)**(p2)
 	sfft = fft*(a+b)
@@ -51,10 +52,7 @@ def genwf(q = 1.7, chiA = .8, thetaA = .1*np.pi, phiA = 0., chiB = .5, thetaB = 
 	chiA0 = np.array([chiA*np.sin(thetaA)*np.cos(phiA), chiA*np.sin(thetaA)*np.sin(phiA), chiA*np.cos(thetaA)])
 	chiB0 = np.array([chiB*np.sin(thetaB)*np.cos(phiB), chiB*np.sin(thetaB)*np.sin(phiB), chiB*np.cos(thetaB)])
 
-	dt = 1./sample_rate_hz
-	sample_times = np.arange(-1., 0.03, dt)
-
-	#pdb.set_trace()
+	sample_times = np.arange(-7., 0.03, dt)
 
 	h = sur(q, chiA0, chiB0, theta=np.pi/2., phi=0, MTot = 65., distance=1000, t=sample_times)
 	h_plus=np.real(h)
@@ -79,12 +77,16 @@ def injectSig(wf, noise, start_time_s = 0):
 def bandpass(signal, startf=10, stopf=30, w=1):
 	# in fourier domain, multiply by sigmoids with low cutoff and high cutoff
 	fft = np.fft.rfft(signal)
-	f = np.fft.fftfreq(len(fft),.01)
+	f = np.fft.rfftfreq(len(signal),dt)
+	pdb.set_trace()
 	a = 1/(1+np.exp(-(1/w)*(f-startf)))
-	b = 1/(1+np.exp(-(1/w)*(-f-(stopf))))
-	sfft = fft*(a+b)
+	b = 1/(1+np.exp(-(1/w)*(-f+stopf)))
+	sfft = fft*(a*b)
 	fpos=f[0:int(len(f)/2)]
 	filtsig = np.fft.irfft(sfft)
+	plt.plot(f,a*b)
+	plt.show()
+	pdb.set_trace()
 	# plt.plot(filtsig)
 	# plt.show()
 	return filtsig
@@ -92,15 +94,19 @@ def bandpass(signal, startf=10, stopf=30, w=1):
 # do things:
 noise = shadedNoise(gaussianNoise(), 10, 2, 10, 2, 1)
 wf = genwf()
-detectedSig = injectSig(wf, noise)
+detectedSig = injectSig(wf, np.zeros(len(noise)))
 bpSig = bandpass(detectedSig)
 plt.plot(detectedSig)
 plt.plot(bpSig)
 plt.show()
 # does the noise have proper amplitude?
 
+# todo: readme (get rob to proofread)
+# 
 
-
+# nyquist = sr/2, that is the highest frequency we can get via fft
+# aliasing is not occuring based on what we see in fft (not growing with frequency)
+# max frequency: 1/(fmax) = Mtot*G/c^3
 
 #this doesn't work:
 #spec = gws.EvaluateSurrogate('surrogates/NRSur7dq2.h5', ell_m=[(2,2), (3,3)])

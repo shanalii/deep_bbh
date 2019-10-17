@@ -101,9 +101,6 @@ plt.plot(bpSig)
 plt.show()
 # does the noise have proper amplitude?
 
-# todo: readme (get rob to proofread)
-# 
-
 # nyquist = sr/2, that is the highest frequency we can get via fft
 # aliasing is not occuring based on what we see in fft (not growing with frequency)
 # max frequency: 1/(fmax) = Mtot*G/c^3

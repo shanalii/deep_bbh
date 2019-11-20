@@ -6,6 +6,7 @@ import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
 from parse_config import ConfigParser
+import pdb
 
 
 def main(config):
@@ -52,6 +53,7 @@ def main(config):
             #
             # save sample images, or do something with output here
             #
+            pdb.set_trace()
 
             # computing loss, metrics on test set
             loss = loss_fn(output, target)

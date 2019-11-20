@@ -40,6 +40,7 @@ class ShadedNoiseDS(Dataset):
         self.dur_s = dur_s
         self.samp_rate_hz = samp_rate_hz
         self.dt = 1./samp_rate_hz
+        self.isSignal = 0
 
     # return number of samples
     def __len__(self):
@@ -53,6 +54,7 @@ class ShadedNoiseDS(Dataset):
         noise = self.shadedNoise(self.gaussianNoise(self.dur_s, self.samp_rate_hz), 10, 2, 10, 2, 1, self.dt)
 
         if (choice):
+            self.isSignal = 1
             wf = self.genwf()
             detectedSig = self.injectSig(wf, np.zeros(len(noise)))
             
@@ -69,8 +71,7 @@ class ShadedNoiseDS(Dataset):
         # if (choice): plt.plot(detectedSig)
         # plt.show()
         signal = np.expand_dims(signal, axis=0).astype(np.float32)
-        # print(signal)
-        return (signal, torch.FloatTensor([0,1]))
+        return (signal, self.isSignal)
 
     # generate gaussian noise
     def gaussianNoise(self, dur_s, samp_rate_hz, amp=(1,1), noise_sigma=(1.e-10, 2.e-10)):

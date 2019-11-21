@@ -53,7 +53,10 @@ def main(config):
             #
             # save sample images, or do something with output here
             #
-            pdb.set_trace()
+            print("target: ")
+            print(target)
+            print("output: ")
+            print(output)
 
             # computing loss, metrics on test set
             loss = loss_fn(output, target)

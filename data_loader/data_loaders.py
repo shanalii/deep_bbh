@@ -27,7 +27,7 @@ class MnistDataLoader(BaseDataLoader):
 class ShadedNoiseDL(BaseDataLoader):
     
     def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True, 
-        samp_rate_hz=1000., num_samps=5, dur_s=8.192):
+        samp_rate_hz=1000., num_samps=50, dur_s=8.192):
         self.data_dir = data_dir
         self.dataset = ShadedNoiseDS(samp_rate_hz=samp_rate_hz, num_samps=num_samps, dur_s=dur_s)
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers)
@@ -40,7 +40,6 @@ class ShadedNoiseDS(Dataset):
         self.dur_s = dur_s
         self.samp_rate_hz = samp_rate_hz
         self.dt = 1./samp_rate_hz
-        self.isSignal = 0
 
     # return number of samples
     def __len__(self):
@@ -50,11 +49,10 @@ class ShadedNoiseDS(Dataset):
     def __getitem__(self, idx):
 
         # .5 chance of only noise
-        choice = np.random.choice([True, True, False])
+        choice = np.random.choice([False, True])
         noise = self.shadedNoise(self.gaussianNoise(self.dur_s, self.samp_rate_hz), 10, 2, 10, 2, 1, self.dt)
 
         if (choice):
-            self.isSignal = 1
             wf = self.genwf()
             detectedSig = self.injectSig(wf, np.zeros(len(noise)))
             
@@ -63,18 +61,23 @@ class ShadedNoiseDS(Dataset):
             #plt.plot(bpSig)
             # plt.plot(detectedSig)
             # plt.show()
-            signal = detectedSig + noise
+            pltSig = detectedSig + noise
+            totalSig = np.expand_dims(pltSig, axis=0).astype(np.float32)
+            signal = totalSig, torch.FloatTensor([1,0])
+            
         else:
-            signal = noise
+            pltSig = noise
+            totalSig = np.expand_dims(pltSig, axis=0).astype(np.float32)
+            signal = totalSig, torch.FloatTensor([0,1])
 
-        # plt.plot(signal)
-        # if (choice): plt.plot(detectedSig)
-        # plt.show()
-        signal = np.expand_dims(signal, axis=0).astype(np.float32)
-        return (signal, self.isSignal)
+        #plt.plot(pltSig)
+        #plt.show()
+        print(choice)
+        return signal
 
     # generate gaussian noise
-    def gaussianNoise(self, dur_s, samp_rate_hz, amp=(1,1), noise_sigma=(1.e-10, 2.e-10)):
+    #noise_sigma=(1.e-10, 2.e-10)
+    def gaussianNoise(self, dur_s, samp_rate_hz, amp=(1,1), noise_sigma=(0,0)):
 
         # total number of samples in the time-series data
         tot_samps = int(dur_s * samp_rate_hz)
@@ -140,7 +143,9 @@ class ShadedNoiseDS(Dataset):
     # takes waveform and noise, place waveform into random position and add them
     def injectSig(self, wf, noise):
         tot_samps = len(noise)
-        start_samp_num = np.random.randint(tot_samps - len(wf))
+
+        #start_samp_num = np.random.randint(tot_samps - len(wf))
+        start_samp_num = 0
         wfpad = np.pad(wf, (start_samp_num, tot_samps - start_samp_num - len(wf)), 'constant', constant_values=(0,0))
         combined = noise + wfpad
         return combined

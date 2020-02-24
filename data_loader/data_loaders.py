@@ -25,9 +25,9 @@ class MnistDataLoader(BaseDataLoader):
 
 
 class ShadedNoiseDL(BaseDataLoader):
-    
+    # CHANGE num_samps
     def __init__(self, data_dir, batch_size, shuffle=True, validation_split=0.0, num_workers=1, training=True, 
-        samp_rate_hz=1000., num_samps=50, dur_s=8.192):
+        samp_rate_hz=1000., num_samps=500, dur_s=8.192):
         self.data_dir = data_dir
         self.dataset = ShadedNoiseDS(samp_rate_hz=samp_rate_hz, num_samps=num_samps, dur_s=dur_s)
         super().__init__(self.dataset, batch_size, shuffle, validation_split, num_workers)
@@ -63,16 +63,15 @@ class ShadedNoiseDS(Dataset):
             # plt.show()
             pltSig = detectedSig + noise
             totalSig = np.expand_dims(pltSig, axis=0).astype(np.float32)
-            signal = totalSig, torch.FloatTensor([1,0])
+            signal = torch.from_numpy(totalSig), torch.FloatTensor([1,0])
             
         else:
             pltSig = noise
             totalSig = np.expand_dims(pltSig, axis=0).astype(np.float32)
-            signal = totalSig, torch.FloatTensor([0,1])
+            signal = torch.from_numpy(totalSig), torch.FloatTensor([0,1])
 
         #plt.plot(pltSig)
         #plt.show()
-        print(choice)
         return signal
 
     # generate gaussian noise

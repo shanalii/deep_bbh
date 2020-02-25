@@ -31,8 +31,7 @@ class deepFilter(BaseModel):
         #self.conv3_drop = nn.Dropout(0.8)
         self.fc1 = nn.Linear(7616, 64)
         self.fc2 = nn.Linear(64, num_classes)
-        self.softmax = nn.Softmax(dim=1)
-        #self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
         x = F.relu(F.max_pool1d(self.conv1(x), 4))
@@ -42,8 +41,7 @@ class deepFilter(BaseModel):
         x = F.relu(self.fc1(x))
         #x = F.dropout(x, training=self.training)
         x = self.fc2(x)
-        x = self.softmax(x)
-        #x = self.sigmoid(x)
+        x = self.sigmoid(x)
         return x
 
 class deeperFilter(BaseModel):
@@ -67,5 +65,16 @@ class deeperFilter(BaseModel):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
+        x = self.sigmoid(x)
+        return x
+
+class linclass(BaseModel):
+    def __init__(self, num_classes=2):
+        super().__init__()
+        self.layer = torch.nn.Linear(8192,num_classes)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.layer(x)
         x = self.sigmoid(x)
         return x
